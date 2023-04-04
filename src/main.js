@@ -28,9 +28,5 @@ app.post("/upload", (req, res) => {
   });
 });
 
-if (process.env.MODE === "prod") {
-  app.listen(443);
-} else {
-  console.log("Listening on http://localhost:3000");
-  app.listen(3000);
-}
+console.log(`Listening on http://localhost:${process.env.PORT || 3000}`);
+app.listen(process.env.PORT || 3000);
