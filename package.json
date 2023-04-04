@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "node src/main.js",
-    "start": "node src/main.js"
+    "start": "MODE=\"prod\" node src/main.js"
   },
   "keywords": [],
   "author": "",
