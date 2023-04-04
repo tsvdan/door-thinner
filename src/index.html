@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Сжима.ю</title>
+  </head>
+  <body>
+    <label for="f">Файл сжать</label>
+    <input type="file" id="f" onchange="handleUpload()" />
+
+    <a id="file-ready-link" href="#" target="_blank" style="display: none"
+      >Файл готов!</a
+    >
+
+    <script>
+      async function handleUpload() {
+        console.log("file upload");
+        const file = document.querySelector("#f").files[0];
+        console.log({ file });
+
+        const fd = new FormData();
+        fd.set("input", file);
+        const response = await fetch("/upload", { method: "POST", body: fd });
+        console.log({ response });
+
+        const blob = await response.blob();
+        const newBlob = new Blob([blob]); // do i need this?
+        const blobUrl = window.URL.createObjectURL(newBlob);
+
+        // hax
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.setAttribute("download", `MaybeCompressed.${file.name}`);
+        document.body.appendChild(link);
+        link.click();
+
+        // clean up
+        link.parentNode.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }
+    </script>
+  </body>
+</html>
