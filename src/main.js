@@ -16,11 +16,18 @@ app.post("/upload", (req, res) => {
   incomingForm.parse(req).on("file", (_, file) => {
     console.log(file.filepath, file.originalFilename);
     child_process.exec(
-      `${ffmpegPath} -i ${file.filepath} -b:v 5K -y ${path.resolve(
+      `${ffmpegPath} -i ${file.filepath} -b:v 1M -y ${path.resolve(
         path.dirname("."),
         "output.mp4"
       )}`,
-      () => {
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error("Big error:", error);
+          res.status(500);
+          return;
+        }
+        console.log("LOGS", stdout);
+        console.log("ERRS", stderr);
         console.log("returning");
         res.sendFile("output.mp4", { root: path.dirname(".") });
       }
