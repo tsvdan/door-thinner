@@ -2,40 +2,109 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Сжима.ю</title>
-  </head>
-  <body>
-    <label for="f">Файл сжать</label>
-    <input type="file" id="f" onchange="handleUpload()" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    <a id="file-ready-link" href="#" target="_blank" style="display: none"
-      >Файл готов!</a
+      .visible {
+        visibility: visible !important;
+      }
+    </style>
+  </head>
+  <body style="color: white; background-color: lightslategrey">
+    <form
+      id="upload-form"
+      action="#"
+      method="post"
+      enctype="multipart/form-data"
+      style="
+        margin: 0 auto;
+        height: 90vh;
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+      "
     >
+      <div style="align-self: center">
+        <div style="margin: 0 auto">
+          <label
+            >Файл сжать
+            <input type="file" id="choose-file" name="chosen-file" />
+          </label>
+          <label
+            >Примерный битрейт
+            <select name="bitrate" id="bitrate">
+              <option value="1M">1 Mb/s</option>
+              <option value="200K">200 Kb/s</option>
+            </select>
+          </label>
+        </div>
+        <button style="display: block; width: 100%" id="submit-btn">
+          Сжать
+        </button>
+        <p
+          style="
+            font-size: small;
+            color: rgb(200, 200, 200);
+            visibility: hidden;
+          "
+          id="help-text"
+        >
+          Никак не отображаю прогресс, но наверное он есть; не закрывай
+          страницу!
+        </p>
+      </div>
+    </form>
 
     <script>
-      async function handleUpload() {
-        console.log("file upload");
-        const file = document.querySelector("#f").files[0];
-        console.log({ file });
+      const form = document.querySelector("#upload-form");
+      const file_input = document.querySelector("#choose-file");
+      const help_text = document.querySelector("#help-text");
+      const bitrate_select = document.querySelector("#bitrate");
+      const submit_btn = document.querySelector("#submit-btn");
+      let selected_bitrate = bitrate_select.value;
+      form.onsubmit = handleUpload;
 
-        const fd = new FormData();
-        fd.set("input", file);
-        const response = await fetch("/upload", { method: "POST", body: fd });
+      async function handleUpload(e) {
+        e.preventDefault();
+        const fd = new FormData(form);
+        fd.delete("bitrate"); // принимать точно удобнее в URI; посылать мб тоже? дважды посылать точно не надо
+        if (file_input.files.length > 0) {
+          help_text.classList.add("visible");
+        } else {
+          return alert(
+            "Нужно выбрать файл какой-нибудь, и желательно видео, а то тихо сломаюсь"
+          );
+        }
+        submit_btn.setAttribute("disabled", true);
+        selected_bitrate = bitrate_select.value;
+        const response = await fetch(`/upload?bitrate=${bitrate.value}`, {
+          method: "POST",
+          body: fd,
+        });
+
+        if (!response.ok) {
+          help_text.textContent = await response.text();
+          return;
+        }
         console.log({ response });
-
         const blob = await response.blob();
         const newBlob = new Blob([blob]); // do i need this?
         const blobUrl = window.URL.createObjectURL(newBlob);
-
         // hax
         const link = document.createElement("a");
         link.href = blobUrl;
-        link.setAttribute("download", `MaybeCompressed.${file.name}`);
+        link.setAttribute(
+          "download",
+          `${selected_bitrate}.${file_input.files[0].name}`
+        );
         document.body.appendChild(link);
         link.click();
-
         // clean up
         link.parentNode.removeChild(link);
         window.URL.revokeObjectURL(blobUrl);
