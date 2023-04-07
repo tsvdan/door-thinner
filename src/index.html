@@ -83,9 +83,11 @@
         }
         submit_btn.setAttribute("disabled", true);
         selected_bitrate = bitrate_select.value;
+        const abortController = new AbortController();
         const response = await fetch(`/upload?bitrate=${bitrate.value}`, {
           method: "POST",
           body: fd,
+          signal: abortController.signal,
         });
 
         if (!response.ok) {
